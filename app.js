@@ -1,0 +1,1 @@
+console.log("Hello from app.js! This is where our site's logic lives.");

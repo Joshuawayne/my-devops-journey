@@ -1,0 +1,70 @@
+# A more descriptive name for our new workflow
+name: '02 - Build and Test'
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+# Using 'jobs' to organize our work
+jobs:
+  # First job: a linter to check code quality. This is our "test".
+  lint-job:
+    name: 'Check Code Quality (Lint)' # A human-friendly name for the job
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository's code so the runner can access it.
+      # This is a standard first step for almost any job.
+      - name: 'Checkout repository'
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the Node.js environment.
+      # 'actions/setup-node' is a pre-built action that makes this easy.
+      # We are explicit about the version to ensure consistent builds.
+      - name: 'Setup Node.js environment'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Specify a recent LTS version
+
+      # Step 3: Install our project's dependencies (like eslint).
+      # 'npm ci' is often preferred in CI over 'npm install' because it's faster
+      # and uses the package-lock.json for more deterministic builds.
+      - name: 'Install npm dependencies'
+        run: npm ci
+
+      # Step 4: Run the linter. This command comes from our package.json script.
+      - name: 'Run linter'
+        run: npm run lint
+
+  # Second job: a build job that simulates creating a final product.
+  # This job will only run if the 'lint-job' succeeds.
+  build-job:
+    name: 'Build Website Artifact'
+    runs-on: ubuntu-latest
+    needs: lint-job # This line makes this job dependent on 'lint-job'
+
+    steps:
+      - name: 'Checkout repository'
+        uses: actions/checkout@v4
+
+      # In a real project, this is where you would minify CSS, bundle JS, etc.
+      # For us, the "build" is just creating a directory with our files.
+      - name: 'Simulate a build process'
+        run: |
+          mkdir build_output
+          cp index.html build_output/
+          cp style.css build_output/
+          cp app.js build_output/
+          echo "Build complete. Files are in build_output."
+          ls -l build_output
+
+      # Step to save our build output. This is crucial for deployment later.
+      # An "artifact" is a file or collection of files produced during a workflow run.
+      - name: 'Upload build artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          # The name of the artifact that will be saved.
+          name: website-files
+          # The path to the files/directory to upload.
+          path: build_output/
