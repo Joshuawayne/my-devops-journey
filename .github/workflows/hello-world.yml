@@ -1,0 +1,26 @@
+# Name for this workflow. This is what shows up in the GitHub Actions tab.
+name: '01 - Hello World CI'
+
+# This section defines the trigger for the workflow.
+on:
+  # We want this to run every time code is pushed to the 'main' branch.
+  push:
+    branches: [ main ]
+  # This also allows us to run it manually from the Actions tab.
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel.
+jobs:
+  # We define a single job named 'say-hello-job'. The name is arbitrary but should be descriptive.
+  say-hello-job:
+    # The type of runner that the job will run on. 'ubuntu-latest' is the most common and cheapest.
+    runs-on: ubuntu-latest
+
+    # 'steps' are a sequence of tasks that will be executed as part of the job.
+    steps:
+      # A step can run a command-line program. The 'name' is for display in the logs.
+      - name: 'Say Hello'
+        run: echo "Hello, DevOps Journey! The pipeline is running."
+
+      - name: 'Print the current date'
+        run: date
