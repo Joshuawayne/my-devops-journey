@@ -1,0 +1,63 @@
+# Final pipeline: Test, Build, and Deploy
+name: '03 - Deploy Website to GitHub Pages'
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+# We set permissions for the
+# entire workflow here, so it's clear what capabilities it has. We need
+# 'pages: write' to be able to deploy to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # We'll re-use our test/lint job from before.
+  test:
+    name: 'Test (Lint)'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm run lint
+
+  # We'll also re-use our build job.
+  build:
+    name: 'Build'
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: 'Build website'
+        run: |
+          mkdir -p dist # Use -p to create parent directories if needed
+          cp index.html style.css app.js dist/
+      - name: 'Upload artifact for deployment'
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages # The deployment action expects this name by default
+          path: dist/
+
+  # The new deployment job!
+  deploy:
+    name: 'Deploy'
+    runs-on: ubuntu-latest
+    needs: build # This job depends on the build job.
+
+    # These environment variables are used by the deployment action.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }} # This will output the final URL in the logs
+
+    steps:
+      # This action handles the entire deployment process to GitHub Pages.
+      - name: 'Deploy to GitHub Pages'
+        id: deployment
+        uses: actions/deploy-pages@v4
+        # This action automatically fetches the 'github-pages' artifact. No need to download it manually.
